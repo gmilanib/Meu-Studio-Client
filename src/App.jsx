@@ -1,7 +1,6 @@
 import './App.css'
 
-function ClientForm() {
-
+function PostClient() {
     function CallPost(formData){
         const nome = formData.get('name');
         const email = formData.get('email');
@@ -21,14 +20,17 @@ function ClientForm() {
 
     }
 
-    return (<form action={CallPost}>
+    return (
+        <form action={CallPost}>
             <input name="name" type="text" placeholder="Nome"/>
             <br/>
             <input name="email" type="email" placeholder="Email"/>
             <br/>
             <input name="telefone" type="tel" placeholder="Telefone"/>
             <br/>
-            <button type="submit">Botão</button>
-        </form>)
+            <button type="submit">Cadastrar Cliente</button>
+        </form>
+        )
 }
-export default ClientForm
+
+export default PostClient
