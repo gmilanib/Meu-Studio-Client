@@ -33,4 +33,9 @@ function PostClient() {
         )
 }
 
-export default PostClient
+export default function ScreenPostClient() {
+    return (
+        <div className="Center">
+        <PostClient />
+        </div>);}
+
