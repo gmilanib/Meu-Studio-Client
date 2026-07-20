@@ -1,4 +1,5 @@
 import './App.css'
+import Header from './Header.jsx'
 
 function PostClient() {
     function CallPost(formData){
@@ -35,7 +36,11 @@ function PostClient() {
 
 export default function ScreenPostClient() {
     return (
-        <div className="Center">
-            <PostClient />
-        </div>);}
-
+        <>
+            <Header />
+            <main className="Center">
+                <PostClient />
+            </main>
+        </>
+    )
+}
