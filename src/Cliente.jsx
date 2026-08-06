@@ -16,6 +16,7 @@ function PostClient() {
                 headers: {
                     'Content-Type':'application/json',
                 },
+                credentials: 'include',
                 body: requestBody
             })
 
@@ -39,7 +40,7 @@ export default function ScreenPostClient() {
         <>
             <Header />
             <main className="Center">
-                <PostClient />
+            <PostClient />
             </main>
         </>
     )

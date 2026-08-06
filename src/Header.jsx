@@ -1,6 +1,14 @@
-import { NavLink } from 'react-router'
+import { NavLink, useNavigate } from 'react-router'
+import { useAuth } from './Auth.jsx'
 
 export default function Header() {
+    const { logout } = useAuth()
+    const navigate = useNavigate()
+
+    async function handleLogout() {
+        await logout()
+        navigate('/login', { replace: true })
+    }
     return (
         <header className="app-header">
             <NavLink to="/" className="app-brand">
@@ -21,6 +29,9 @@ export default function Header() {
                 >
                     Clientes
                 </NavLink>
+                <button className="nav-link logout-button" type="button" onClick={handleLogout}>
+                    Sair
+                </button>
             </nav>
         </header>
     )

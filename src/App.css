@@ -16,7 +16,7 @@ body{
 }
 form{
     width: 300px;
-    height:200px;
+    height:min(50dvh, 150px);
     background-color: #C2B7AB;
     text-align: center;
     border-radius: 10px;
@@ -81,7 +81,7 @@ button{
 
 .Center-Box {
     width: min(100%, 1100px);
-    height: min(50dvh, 600px);
+    height: min(50dvh, 100px);
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1.25rem;
@@ -142,4 +142,46 @@ button{
     .Center-Box {
         grid-template-columns: 1fr;
     }
+}
+
+.logout-button {
+    width: auto;
+    color: inherit;
+    cursor: pointer;
+}
+
+.login-page {
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.login-form {
+    width: min(100%, 22rem);
+    height: auto;
+    padding: 2rem;
+    text-align: left;
+}
+
+.login-form h1,
+.login-form p {
+    text-align: center;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.login-form input {
+    box-sizing: border-box;
+    margin: 0 0 1rem;
+    left: 0;
+}
+
+.form-error {
+    color: #7d1d1d;
+    font-size: 0.9rem;
 }
