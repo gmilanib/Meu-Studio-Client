@@ -12,17 +12,24 @@ export function AuthProvider({ children }) {
     setLoading(true)
 
     try {
-      await fetch(`${API_URL}/auth/csrf`, { credentials: 'include' })
+      const csrfResponse = await fetch(`${API_URL}/auth/csrf`, { credentials: 'include' })
+      const csrfData = await csrfResponse.json()
 
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': csrfData.token,
+        },
         body: JSON.stringify({ username, password }),
       })
+      debugger
 
       if (!response.ok) throw new Error('Usuário ou senha inválidos.')
 
+      const authData = await response.json()
+      console.log(authData)
       setAuthenticated(true)
     } finally {
       setLoading(false)
