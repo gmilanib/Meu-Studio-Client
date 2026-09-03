@@ -1,16 +1,15 @@
 import './App.css'
 import Header from './Header.jsx'
+import { apiFetch } from './api.js'
 
 function PostClient() {
-    function CallPost(formData){
+    async function CallPost(formData){
         const nome = formData.get('name');
         const email = formData.get('email');
         const telefone = formData.get('telefone');
         const requestBody = JSON.stringify({nome, email, telefone})
 
-        console.log(requestBody)
-
-        fetch('http://localhost:9000/clientes',
+        const response = await apiFetch('/clientes',
             {
                 method: 'POST',
                 headers: {
@@ -19,6 +18,8 @@ function PostClient() {
                 credentials: 'include',
                 body: requestBody
             })
+
+            if (!response.ok) throw new Error ('Erro ao cadastrar cliente')
 
     }
 

@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState } from 'react'
+import { apiFetch } from './api.js'
 
-const API_URL = 'http://localhost:9000'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
@@ -12,24 +12,16 @@ export function AuthProvider({ children }) {
     setLoading(true)
 
     try {
-      const csrfResponse = await fetch(`${API_URL}/auth/csrf`, { credentials: 'include' })
-      const csrfData = await csrfResponse.json()
-
-      const response = await fetch(`${API_URL}/auth/login`, {
+      const response = await apiFetch('/auth/login', {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'X-XSRF-TOKEN': csrfData.token,
         },
         body: JSON.stringify({ username, password }),
       })
-      debugger
 
       if (!response.ok) throw new Error('Usuário ou senha inválidos.')
 
-      const authData = await response.json()
-      console.log(authData)
       setAuthenticated(true)
     } finally {
       setLoading(false)
@@ -38,10 +30,12 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     try {
-      await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      })
+      const response =await apiFetch('/auth/logout', {
+        method: 'POST',})
+
+        if (!response.ok) throw new Error ('Erro ao fazer logout')
+        
+      
     } finally {
       setAuthenticated(false)
     }
