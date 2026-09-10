@@ -29,6 +29,12 @@ export default function Header() {
                 >
                     Clientes
                 </NavLink>
+                <NavLink
+                    to="/financeiro"
+                    className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                >
+                    Finanças
+                </NavLink>
                 <button className="nav-link logout-button" type="button" onClick={handleLogout}>
                     Sair
                 </button>

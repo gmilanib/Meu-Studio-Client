@@ -185,3 +185,46 @@ button{
     color: #7d1d1d;
     font-size: 0.9rem;
 }
+
+.page-content {
+    min-height: calc(100vh - 4.5rem);
+    display: grid;
+    place-items: start center;
+    padding: 3rem 1.5rem;
+    box-sizing: border-box;
+}
+
+.financial-card {
+    width: min(100%, 34rem);
+    padding: 2rem;
+    box-sizing: border-box;
+    background-color: #C2B7AB;
+    border-radius: 10px;
+}
+
+.financial-card h1 { margin-top: 0; }
+
+.financial-form {
+    width: auto;
+    height: auto;
+    padding: 0;
+    background: transparent;
+    text-align: left;
+}
+
+.financial-form label {
+    display: block;
+    margin: 1rem 0 0.25rem;
+}
+
+.financial-form input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    left: 0;
+}
+
+.financial-form button { margin-top: 1.5rem; }
+.form-message { margin: 1rem 0 0; }
+.form-message.error { color: #7d1d1d; }
+.form-message.success { color: #205c3b; }

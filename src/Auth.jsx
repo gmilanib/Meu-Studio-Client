@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState } from 'react'
-import { apiFetch } from './api.js'
+import { apiFetch, refreshCsrfToken } from './api.js'
 
 const AuthContext = createContext(null)
 
@@ -17,11 +17,12 @@ export function AuthProvider({ children }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: username.trim(), password }),
       })
 
       if (!response.ok) throw new Error('Usuário ou senha inválidos.')
 
+      await refreshCsrfToken()
       setAuthenticated(true)
     } finally {
       setLoading(false)
@@ -29,16 +30,7 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
-    try {
-      const response =await apiFetch('/auth/logout', {
-        method: 'POST',})
-
-        if (!response.ok) throw new Error ('Erro ao fazer logout')
-        
-      
-    } finally {
-      setAuthenticated(false)
-    }
+    setAuthenticated(false)
   }
 
   return (

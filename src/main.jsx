@@ -6,6 +6,7 @@ import ScreenPostClient from './Cliente.jsx'
 import LoginPage from './Login.jsx'
 import { AuthProvider } from './Auth.jsx'
 import ProtectedRoute from './ProtectedRoute.jsx'
+import FinanceiroPage from './Financeiro.jsx'
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<ProtectedRoute><App /></ProtectedRoute>} />
         <Route path="/clientes" element={<ProtectedRoute><ScreenPostClient /></ProtectedRoute>} />
+        <Route path="/financeiro" element={<ProtectedRoute><FinanceiroPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

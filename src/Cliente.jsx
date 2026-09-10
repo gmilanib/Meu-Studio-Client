@@ -7,7 +7,11 @@ function PostClient() {
         const nome = formData.get('name');
         const email = formData.get('email');
         const telefone = formData.get('telefone');
-        const requestBody = JSON.stringify({nome, email, telefone})
+        const requestBody = JSON.stringify({
+            nome,
+            email: email || null,
+            telefone: telefone || null,
+        })
 
         const response = await apiFetch('/clientes',
             {

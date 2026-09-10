@@ -8,14 +8,8 @@ function Index(){
          <Header />
          <div className="Center">
          <div className="Center-Box">
-             {/*<Link to="/clientes" className="btn-link">Cadastrar cliente</Link>*/}
-             {/*<Link to="/clientes" className="btn-link">Cadastrar cliente</Link>*/}
-             {/*<Link to="/clientes" className="btn-link">Cadastrar cliente</Link>*/}
              <Link to="/clientes" className="btn-link">Clientes</Link>
-             <Link to="/clientes" className="btn-link">Agendas</Link>
-             <Link to="/clientes" className="btn-link">Finanças</Link>
-             <Link to="/clientes" className="btn-link">Estoques e Materiais</Link>
-             <Link to="/Login   " className="btn-link">Login</Link>
+             <Link to="/financeiro" className="btn-link">Lançar receita</Link>
 
          </div>
              </div>
