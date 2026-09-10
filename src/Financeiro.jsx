@@ -55,10 +55,10 @@ export default function FinanceiroPage() {
   }
 
   return (
-    <>
-      <Header />
-      <main className="page-content">
+    <main className="app-shell"><div className="app-frame"><Header />
+      <div className="page-content">
         <section className="financial-card" aria-labelledby="financial-title">
+          <p className="eyebrow">Financeiro</p>
           <h1 id="financial-title">Lançar receita</h1>
           <p>Registre um faturamento já realizado pelo studio.</p>
           <form className="financial-form" onSubmit={handleSubmit}>
@@ -77,7 +77,7 @@ export default function FinanceiroPage() {
             <button type="submit" disabled={submitting}>{submitting ? 'Lançando…' : 'Lançar receita'}</button>
           </form>
         </section>
-      </main>
-    </>
+      </div>
+    </div></main>
   )
 }

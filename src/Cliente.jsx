@@ -28,25 +28,18 @@ function PostClient() {
     }
 
     return (
-        <form action={CallPost}>
-            <input name="name" type="text" placeholder="Nome"/>
-            <br/>
-            <input name="email" type="email" placeholder="Email"/>
-            <br/>
-            <input name="telefone" type="tel" placeholder="Telefone"/>
-            <br/>
-            <button type="submit">Cadastrar Cliente</button>
+        <form className="client-form" action={CallPost}>
+            <p className="eyebrow">Relacionamentos</p><h1>Novo cliente</h1><p>Adicione os dados para facilitar seus próximos atendimentos.</p>
+            <label htmlFor="name">Nome</label><input id="name" name="name" type="text" placeholder="Nome completo" required />
+            <label htmlFor="email">E-mail</label><input id="email" name="email" type="email" placeholder="cliente@email.com" />
+            <label htmlFor="telefone">Telefone</label><input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000" />
+            <button type="submit">Cadastrar cliente</button>
         </form>
     )
 }
 
 export default function ScreenPostClient() {
     return (
-        <>
-            <Header />
-            <main className="Center">
-            <PostClient />
-            </main>
-        </>
+        <main className="app-shell"><div className="app-frame"><Header /><div className="page-content"><PostClient /></div></div></main>
     )
 }
