@@ -33,7 +33,6 @@ function PostClient() {
             <p className="eyebrow">Relacionamentos</p><h1>Novo cliente</h1><p>Adicione os dados para facilitar seus próximos atendimentos.</p>
             <nav className="financial-switch" aria-label="Opções de clientes"><Link to="/clientes" className="active">Cadastrar cliente</Link><Link to="/clientes/relatorio">Relatório de clientes</Link></nav>
             <label htmlFor="name">Nome</label><input id="name" name="name" type="text" placeholder="Nome completo" required />
-            <label htmlFor="email">E-mail</label><input id="email" name="email" type="email" placeholder="cliente@email.com" />
             <label htmlFor="telefone">Telefone</label><input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000" />
             <button type="submit">Cadastrar cliente</button>
         </form>
