@@ -27,7 +27,8 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h1>Meu Studio</h1>
+        <img className="login-logo" src="/brand-logo.png" alt="Taynara Rosa Beauty" />
+        <h1>Meu studio</h1>
         <p>Acesse sua conta para continuar.</p>
         <label htmlFor="username">Usuário</label>
         <input id="username" name="username" type="text" value={username} onChange={(event) => setUsername(event.target.value)} autoComplete="username" required />

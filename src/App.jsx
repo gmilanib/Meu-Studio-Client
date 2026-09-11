@@ -15,7 +15,7 @@ function Index(){
              <Link to="/financeiro" className="dashboard-card card-link"><div><h2>Financeiro</h2><p>Registre receitas e mantenha seu caixa organizado.</p></div><div><div className="chart" aria-hidden="true"></div><span className="metric">+ receita</span></div></Link>
              <Link to="/clientes" className="dashboard-card card-link"><div><h2>Clientes</h2><p>Cadastre e preserve os dados de quem confia no seu trabalho.</p></div><div className="mini-orb" aria-hidden="true"></div></Link>
              <section className="dashboard-card"><h2>Acesso rápido</h2><div className="quick-actions"><Link to="/clientes" className="quick-action"><span aria-hidden="true">＋</span>Novo cliente</Link><Link to="/financeiro" className="quick-action"><span aria-hidden="true">↗</span>Nova receita</Link></div></section>
-             <section className="dashboard-card"><h2>Personalize seu espaço</h2><p>Use o seletor de cor no topo para deixar a interface com a identidade do seu studio.</p></section>
+             <section className="dashboard-card"><h2>Seu espaço</h2><p>Uma interface organizada e alinhada à identidade do seu studio.</p></section>
            </div>
          </section>
      </div>
