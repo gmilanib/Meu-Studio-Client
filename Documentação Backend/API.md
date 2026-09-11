@@ -2,6 +2,8 @@
 
 Documentação para integração do frontend com a API do Meu Studio.
 
+Este arquivo, na raiz do projeto, é a referência principal dos contratos HTTP. Sempre que um endpoint for criado ou alterado, atualize aqui método, rota, acesso, parâmetros, validações, exemplos de requisição e resposta e códigos de erro, para permitir a continuidade da implementação do frontend.
+
 ## Informações gerais
 
 | Ambiente | URL base |
@@ -148,6 +150,7 @@ export async function login(dados: LoginRequest): Promise<void> {
 | `PUT` | `/clientes/{id}` | `ADMIN` ou `USER` |
 | `DELETE` | `/clientes/{id}` | `ADMIN` ou `USER` |
 | `POST` | `/financeiro/lancar` | `ADMIN` ou `USER` |
+| `GET` | `/financeiro/faturamentos` | `ADMIN` ou `USER` |
 
 ## Autenticação
 
@@ -191,8 +194,8 @@ X-XSRF-TOKEN: valor-do-token
 
 | Campo | Tipo | Regras |
 |---|---|---|
-| `username` | `string` | Obrigatório e não pode estar em branco |
-| `password` | `string` | Obrigatório e não pode estar em branco |
+| `username` | `string` | Obrigatório e não pode estar em branco; espaços nas extremidades são removidos |
+| `password` | `string` | Obrigatório e não pode estar em branco; espaços não são removidos |
 
 **Resposta `200 OK`:**
 
@@ -270,6 +273,8 @@ type ClienteRequest = {
 };
 ```
 
+No cadastro e na atualização, `email` pode ser omitido ou enviado como `null`/texto em branco. Textos em branco são armazenados como `null`.
+
 Os campos `criadoEm` e `atualizadoEm` são timestamps ISO, por exemplo `2026-09-10T14:30:00`.
 
 ### Listar clientes
@@ -278,22 +283,83 @@ Os campos `criadoEm` e `atualizadoEm` são timestamps ISO, por exemplo `2026-09-
 GET /clientes
 ```
 
+Os filtros abaixo são opcionais e combinados com **E**. Envie-os na URL, sem corpo. A chamada exige sessão (`credentials: "include"`) e não exige header CSRF.
+
+| Parâmetro | Tipo | Regra |
+|---|---|---|
+| `nome` | `string` | Trecho literal, sem distinguir maiúsculas e minúsculas |
+| `email` | `string` | Trecho literal, sem distinguir maiúsculas e minúsculas |
+| `telefone` | `string` | Trecho literal, sem distinguir maiúsculas e minúsculas; não remove a máscara do telefone |
+| `criadoEm` | Data ISO | Dia exato de criação, `YYYY-MM-DD` |
+| `criadoEmInicio` | Data ISO | Primeiro dia de criação, inclusivo |
+| `criadoEmFim` | Data ISO | Último dia de criação, inclusivo |
+| `atualizadoEm` | Data ISO | Dia exato da última atualização, `YYYY-MM-DD` |
+| `atualizadoEmInicio` | Data ISO | Primeiro dia de atualização, inclusivo |
+| `atualizadoEmFim` | Data ISO | Último dia de atualização, inclusivo |
+| `page` | Inteiro | Índice iniciado em zero; padrão `0`; mínimo `0` |
+| `size` | Inteiro | De `1` a `50`; padrão `50`; valores maiores são rejeitados |
+
+Para cada campo de data, escolha dia único ou intervalo. Os filtros de criação e atualização podem ser combinados entre si. Os intervalos aceitam apenas um limite e incluem todos os horários do último dia. Não envie timestamps nos filtros: embora a resposta contenha horários, os parâmetros aceitam dias `YYYY-MM-DD`, sem conversão de fuso.
+
+Textos em branco são ignorados e espaços nas extremidades são removidos. `%` e `_` são texto literal. Campos nulos de e-mail/telefone não correspondem a um filtro preenchido desses campos.
+
+A consulta é paginada no banco e ordenada por `criadoEm` decrescente, com `id` decrescente como desempate. Sem filtros, lista todos os clientes de forma paginada.
+
+```http
+GET /clientes?nome=maria&email=mail&criadoEmInicio=2026-09-01&criadoEmFim=2026-09-11&page=0&size=50
+GET /clientes?atualizadoEm=2026-09-11&page=0&size=20
+```
+
 **Resposta `200 OK`:**
 
 ```json
-[
-  {
-    "id": 1,
-    "nome": "Maria da Silva",
-    "email": "maria@email.com",
-    "telefone": "11999999999",
-    "criadoEm": "2026-09-10T14:30:00",
-    "atualizadoEm": "2026-09-10T14:30:00"
-  }
-]
+{
+  "content": [
+    {
+      "id": 1,
+      "nome": "Maria da Silva",
+      "email": "maria@email.com",
+      "telefone": "11999999999",
+      "criadoEm": "2026-09-10T14:30:00",
+      "atualizadoEm": "2026-09-10T14:30:00"
+    }
+  ],
+  "page": 0,
+  "size": 50,
+  "totalElements": 1,
+  "totalPages": 1
+}
 ```
 
-A listagem atual não possui paginação nem filtros.
+**Mudança de contrato:** a resposta deixou de ser `Cliente[]`. O frontend deve ler `resposta.content` e usar os metadados para navegar. `size` é o tamanho solicitado; `totalElements` e `totalPages` consideram os filtros. Sem resultados, retorna `content: []` e totais zero. Uma página além da última também retorna `200 OK` com `content: []`.
+
+```ts
+type ClientePaginaResponse = {
+  content: Cliente[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+
+const filtros = new URLSearchParams({ nome: "maria", page: "0", size: "50" });
+const paginaClientes = await chamarApi<ClientePaginaResponse>(`/clientes?${filtros}`);
+const clientes = paginaClientes.content;
+const temProximaPagina = paginaClientes.page + 1 < paginaClientes.totalPages;
+```
+
+Use `URLSearchParams` para codificar os valores, omita filtros não preenchidos e retorne para `page=0` ao alterar a pesquisa.
+
+**Possíveis erros:** `400 Bad Request` para paginação inválida, datas malformadas, intervalo invertido ou dia único combinado com intervalo do mesmo campo; `403 Forbidden` para sessão ausente/inválida ou perfil sem acesso. Conflitos de datas e paginação seguem o formato de regra de negócio, por exemplo:
+
+```json
+{
+  "status": "400",
+  "mensagem": "Informe criadoEm ou seu intervalo, nunca ambos"
+}
+```
+
+Erros de conversão de parâmetros podem ter corpo diferente; trate também o status HTTP. `GET /clientes/{id}` mantém seu contrato de resposta individual.
 
 ### Buscar cliente por ID
 
@@ -342,7 +408,7 @@ X-XSRF-TOKEN: valor-do-token
 | Campo | Tipo | Regras |
 |---|---|---|
 | `nome` | `string` | Obrigatório; máximo de 120 caracteres |
-| `email` | `string` ou `null` | Opcional; se informado, deve ser um e-mail válido com no máximo 160 caracteres |
+| `email` | `string` ou `null` | Opcional; quando informado, deve ser um e-mail válido com no máximo 160 caracteres |
 | `telefone` | `string` ou `null` | Opcional; máximo de 20 caracteres |
 
 **Resposta:** `201 Created` com o cliente criado.
@@ -459,6 +525,114 @@ const faturamento = await chamarApi<FaturamentoResponse>(
 
 ---
 
+### Consultar faturamentos
+
+```http
+GET /financeiro/faturamentos
+```
+
+Retorna `200 OK` com JSON paginado. Exige sessão (`credentials: "include"`); por ser uma leitura `GET`, não exige header CSRF. Os parâmetros são enviados na URL, sem corpo.
+
+Todos os filtros são opcionais e combinados com **E**: cada registro retornado deve atender a todos os filtros informados.
+
+| Parâmetro | Tipo | Regra |
+|---|---|---|
+| `cliente` | `string` | Busca por trecho, sem distinguir maiúsculas e minúsculas |
+| `procedimento` | `string` | Busca por trecho, sem distinguir maiúsculas e minúsculas |
+| `valor` | Decimal | Igualdade exata; usar ponto decimal, por exemplo `150.00` |
+| `meioDePagamento` | `string` | Igualdade exata, diferenciando maiúsculas e minúsculas |
+| `data` | Data ISO | Dia exato, no formato `YYYY-MM-DD` |
+| `dataInicio` | Data ISO | Limite inicial inclusivo, no formato `YYYY-MM-DD` |
+| `dataFim` | Data ISO | Limite final inclusivo, no formato `YYYY-MM-DD` |
+| `page` | Inteiro | Índice iniciado em zero; padrão `0`; deve ser maior ou igual a zero |
+| `size` | Inteiro | De `1` a `50`; padrão `50`; valores acima de 50 são rejeitados |
+
+Regras de consulta:
+
+- Use `data` ou o intervalo (`dataInicio`/`dataFim`), nunca ambos.
+- O intervalo inclui os dois dias limites. É possível informar somente o início ou somente o fim.
+- `dataInicio` não pode ser posterior a `dataFim`.
+- Filtros textuais em branco são ignorados; espaços nas extremidades são removidos. `%` e `_` são tratados como texto literal na busca por trechos.
+- Sem filtros, retorna os registros paginados. A ordenação é fixa: data decrescente e identificador decrescente como desempate.
+- Uma consulta sem resultados ou uma página além da última retorna `200 OK` com `content: []`.
+- O filtro `cliente` pesquisa o nome armazenado no lançamento, não um identificador de cliente.
+
+Exemplos de requisição:
+
+```http
+GET /financeiro/faturamentos?data=2026-09-10&page=0&size=50
+GET /financeiro/faturamentos?cliente=maria&procedimento=design&valor=150.00&meioDePagamento=PIX&dataInicio=2026-09-01&dataFim=2026-09-10&page=0&size=20
+```
+
+**Resposta `200 OK`:**
+
+```json
+{
+  "content": [
+    {
+      "id": "2e942f54-471c-4c62-a5c6-1e877aed0373",
+      "data": "2026-09-10",
+      "cliente": "Maria da Silva",
+      "procedimento": "Design de sobrancelhas",
+      "valor": 150.00,
+      "meioDePagamento": "PIX"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+`content` contém os registros da página; `size` é o tamanho solicitado, não a quantidade efetivamente retornada. `totalElements` e `totalPages` consideram os filtros aplicados. Sem nenhum resultado, ambos são zero.
+
+Exemplo usando `chamarApi` e `FaturamentoResponse` definidos acima:
+
+```ts
+type FaturamentoPaginaResponse = {
+  content: FaturamentoResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
+
+const parametros = new URLSearchParams({
+  cliente: "maria",
+  dataInicio: "2026-09-01",
+  dataFim: "2026-09-10",
+  page: "0",
+  size: "50",
+});
+
+const pagina = await chamarApi<FaturamentoPaginaResponse>(
+  `/financeiro/faturamentos?${parametros.toString()}`,
+);
+
+const temProximaPagina = pagina.page + 1 < pagina.totalPages;
+```
+
+No frontend, use `URLSearchParams` para codificar os valores, omita filtros não preenchidos e volte para `page=0` ao mudar os filtros. Trate datas como strings `YYYY-MM-DD`, sem conversão de fuso horário.
+
+**Possíveis erros:**
+
+- `400 Bad Request`: conflito entre data única e intervalo, intervalo invertido, paginação inválida ou parâmetro com formato incompatível (por exemplo, data inválida ou `size=abc`).
+- `403 Forbidden`: sessão ausente/inválida ou perfil sem acesso.
+
+Erros das regras de intervalo e paginação seguem o formato de regra de negócio, por exemplo:
+
+```json
+{
+  "status": "400",
+  "mensagem": "Informe data ou intervalo de datas, nunca ambos"
+}
+```
+
+O corpo de erros de conversão de parâmetros pode diferir desse formato; trate também o status HTTP.
+
+---
+
 # Respostas de erro
 
 ## Erro de validação
@@ -514,4 +688,4 @@ O formato do corpo dessas respostas não deve ser usado pelo frontend como contr
 - Ao receber `401` no login, informe que o usuário ou a senha são inválidos.
 - Ao receber `403`, verifique a sessão, a permissão do usuário e a presença do CSRF. Se a sessão não for mais válida, redirecione para o login.
 - O backend ainda não possui endpoint de logout nem endpoint para consultar a sessão/usuário atual.
-- O backend ainda não possui endpoint para listar, editar ou excluir faturamentos; atualmente somente o lançamento está disponível.
+- O backend permite lançar e consultar faturamentos; ainda não possui endpoints para editar ou excluir faturamentos.

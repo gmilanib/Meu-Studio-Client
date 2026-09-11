@@ -22,7 +22,10 @@ export default function FinanceiroPage() {
     async function loadClientes() {
       try {
         const response = await apiFetch('/clientes')
-        if (response.ok) setClientes(await response.json())
+        if (response.ok) {
+          const clientPage = await response.json()
+          setClientes(clientPage.content ?? [])
+        }
       } catch {
         // O lançamento continua disponível mesmo que a sugestão de clientes falhe.
       }
