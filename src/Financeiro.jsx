@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import Header from './Header.jsx'
 import { apiFetch, getApiError } from './api.js'
+import ProcedimentoSelect from './ProcedimentoSelect.jsx'
+import './Procedimentos.css'
 
 function getToday() {
   const date = new Date()
@@ -10,10 +12,11 @@ function getToday() {
   return `${date.getFullYear()}-${month}-${day}`
 }
 
-const today = getToday()
-
 export default function FinanceiroPage() {
-  const [form, setForm] = useState({ data: today, cliente: '', procedimento: '', valor: '', meioDePagamento: '' })
+  const today = getToday()
+  const [form, setForm] = useState({ data: today, cliente: '', procedimentoId: '', valor: '', meioDePagamento: '' })
+  const [selected, setSelected] = useState(null)
+  const [catalogRevision, setCatalogRevision] = useState(0)
   const [clientes, setClientes] = useState([])
   const [status, setStatus] = useState({ type: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -40,6 +43,7 @@ export default function FinanceiroPage() {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (submitting || !selected) return
     setStatus({ type: '', message: '' })
     setSubmitting(true)
     try {
@@ -47,10 +51,18 @@ export default function FinanceiroPage() {
         method: 'POST',
         body: JSON.stringify({ ...form, valor: Number(form.valor) }),
       })
-      if (!response.ok) throw new Error(await getApiError(response, 'Não foi possível lançar a receita.'))
+      if (!response.ok) {
+        if (response.status === 400 || response.status === 404) {
+          setSelected(null)
+          setForm((current) => ({ ...current, procedimentoId: '' }))
+          setCatalogRevision((current) => current + 1)
+        }
+        throw new Error(await getApiError(response, 'Não foi possível lançar a receita.'))
+      }
 
       setStatus({ type: 'success', message: 'Receita lançada com sucesso.' })
-      setForm({ data: today, cliente: '', procedimento: '', valor: '', meioDePagamento: '' })
+      setForm({ data: getToday(), cliente: '', procedimentoId: '', valor: '', meioDePagamento: '' })
+      setSelected(null)
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Não foi possível lançar a receita.' })
     } finally {
@@ -72,14 +84,16 @@ export default function FinanceiroPage() {
             <label htmlFor="cliente">Cliente</label>
             <input id="cliente" name="cliente" type="text" value={form.cliente} onChange={updateField} list="clientes-cadastrados" maxLength="120" required />
             <datalist id="clientes-cadastrados">{clientes.map((cliente) => <option key={cliente.id} value={cliente.nome} />)}</datalist>
-            <label htmlFor="procedimento">Procedimento</label>
-            <input id="procedimento" name="procedimento" type="text" value={form.procedimento} onChange={updateField} maxLength="160" required />
+            <ProcedimentoSelect selected={selected} disabled={submitting} revision={catalogRevision} onSelect={(item) => {
+              setSelected(item)
+              setForm((current) => ({ ...current, procedimentoId: item?.id || '', valor: item ? String(item.preco) : '' }))
+            }} />
             <label htmlFor="valor">Valor</label>
             <input id="valor" name="valor" type="number" value={form.valor} onChange={updateField} min="0.01" max="9999999999.99" step="0.01" inputMode="decimal" required />
             <label htmlFor="meioDePagamento">Meio de pagamento</label>
             <input id="meioDePagamento" name="meioDePagamento" type="text" value={form.meioDePagamento} onChange={updateField} maxLength="30" placeholder="Ex.: PIX" required />
             {status.message && <p className={`form-message ${status.type}`} role="alert">{status.message}</p>}
-            <button type="submit" disabled={submitting}>{submitting ? 'Lançando…' : 'Lançar receita'}</button>
+            <button type="submit" disabled={submitting || !selected}>{submitting ? 'Lançando…' : 'Lançar receita'}</button>
           </form>
         </section>
       </div>

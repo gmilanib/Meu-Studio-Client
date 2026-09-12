@@ -1,0 +1,20 @@
+.procedure-page > button { margin-bottom: 1rem; }
+.procedure-page button { padding: .75rem 1rem; border: 0; border-radius: .75rem; color: #fff; background: var(--accent); font-weight: 700; }
+.procedure-page button.secondary-action { color: var(--accent); background: rgba(var(--accent-rgb), .09); }
+.procedure-page button:disabled, .procedure-picker button:disabled { cursor: not-allowed; }
+.procedure-form fieldset, .procedure-picker { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: .8rem; }
+.procedure-form label { display: grid; gap: .4rem; }
+.procedure-form input, .procedure-form textarea, .procedure-page select, .procedure-picker select, .procedure-picker input {
+  width: 100%; min-width: 0; padding: .8rem; border: 1px solid var(--line); border-radius: .75rem; background: rgba(255,253,249,.9); color: var(--ink); font: inherit;
+}
+.procedure-form textarea:focus, .procedure-page select:focus, .procedure-picker select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), .15); }
+.procedure-form textarea { min-height: 6rem; resize: vertical; }
+.procedure-actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.procedure-actions button { width: auto; }
+.procedure-picker button { width: auto; margin-top: 0; }
+.procedure-description { max-width: 28rem; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9rem; }
+.procedure-picker legend { margin-bottom: .7rem; font-weight: 600; }
+.procedure-picker p { margin: .3rem 0; }
+.procedure-confirmation { border: 1px solid var(--accent); }
+.procedure-page .report-card { margin-top: 1rem; }
+@media (max-width: 600px) { .procedure-actions button { min-height: 44px; } }

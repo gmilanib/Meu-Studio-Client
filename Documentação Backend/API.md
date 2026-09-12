@@ -458,7 +458,7 @@ POST /financeiro/lancar
 X-XSRF-TOKEN: valor-do-token
 ```
 
-Registra uma receita já realizada pelo studio.
+Registra uma receita já realizada pelo studio. Exige selecionar um procedimento ativo do catálogo. O servidor grava seu ID e uma cópia do nome; o valor cobrado pode diferir do preço sugerido. Registros antigos permanecem consultáveis sem vínculo. Texto livre não é mais aceito em novos lançamentos.
 
 **Corpo:**
 
@@ -466,7 +466,7 @@ Registra uma receita já realizada pelo studio.
 {
   "data": "2026-09-10",
   "cliente": "Maria da Silva",
-  "procedimento": "Design de sobrancelhas",
+  "procedimentoId": "6a0b8c7d-8f01-4ef2-b5b9-529ca7816a10",
   "valor": 150.00,
   "meioDePagamento": "PIX"
 }
@@ -476,7 +476,7 @@ Registra uma receita já realizada pelo studio.
 |---|---|---|
 | `data` | `string` | Obrigatória; formato `YYYY-MM-DD`; não pode ser futura |
 | `cliente` | `string` | Obrigatório; máximo de 120 caracteres |
-| `procedimento` | `string` | Obrigatório; máximo de 160 caracteres |
+| `procedimentoId` | `string (UUID)` | Obrigatório; deve identificar um procedimento ativo |
 | `valor` | `number` | Obrigatório; maior que zero; até 10 inteiros e 2 casas decimais |
 | `meioDePagamento` | `string` | Obrigatório; máximo de 30 caracteres |
 
@@ -499,13 +499,14 @@ Exemplo usando o cliente TypeScript desta documentação:
 type FaturamentoRequest = {
   data: string;
   cliente: string;
-  procedimento: string;
+  procedimentoId: string;
   valor: number;
   meioDePagamento: string;
 };
 
-type FaturamentoResponse = FaturamentoRequest & {
+type FaturamentoResponse = Omit<FaturamentoRequest, "procedimentoId"> & {
   id: string;
+  procedimento: string; // Nome histórico; permanece igual após edições no catálogo.
 };
 
 const faturamento = await chamarApi<FaturamentoResponse>(
@@ -515,7 +516,7 @@ const faturamento = await chamarApi<FaturamentoResponse>(
     body: JSON.stringify({
       data: "2026-09-10",
       cliente: "Maria da Silva",
-      procedimento: "Design de sobrancelhas",
+      procedimentoId: "6a0b8c7d-8f01-4ef2-b5b9-529ca7816a10",
       valor: 150.0,
       meioDePagamento: "PIX",
     } satisfies FaturamentoRequest),
@@ -689,3 +690,36 @@ O formato do corpo dessas respostas não deve ser usado pelo frontend como contr
 - Ao receber `403`, verifique a sessão, a permissão do usuário e a presença do CSRF. Se a sessão não for mais válida, redirecione para o login.
 - O backend ainda não possui endpoint de logout nem endpoint para consultar a sessão/usuário atual.
 - O backend permite lançar e consultar faturamentos; ainda não possui endpoints para editar ou excluir faturamentos.
+
+
+## Procedimentos
+
+Catálogo disponível para perfis `ADMIN` e `USER`, autenticados por sessão. POST e PUT exigem CSRF.
+
+| Método e caminho | Comportamento |
+|---|---|
+| `GET /procedimentos` | Lista paginada; filtros `nome` (trecho literal sem distinguir caixa), `categoria` (exata), `ativo` (true/false; omitido inclui todos), `page` (0 por padrão), `size` (20 por padrão, de 1 a 50). Ordenação por nome sem distinguir caixa e ID. |
+| `GET /procedimentos/categorias` | Array ordenado de categorias distintas não vazias, incluindo procedimentos inativos. |
+| `POST /procedimentos` | Cria ativo; retorna 201 e o cadastro. |
+| `PUT /procedimentos/{id}` | Atualiza os dados; preserva a situação. Retorna 200. |
+| `PUT /procedimentos/{id}/status` | Corpo `{"ativo": false}` para desativar ou `{"ativo": true}` para reativar; retorna 200 e o cadastro. |
+
+Corpo de criação e edição:
+
+```json
+{
+  "nome": "Design de sobrancelhas",
+  "descricao": "Design personalizado",
+  "preco": 150.00,
+  "duracaoMinutos": 45,
+  "categoria": "Sobrancelhas"
+}
+```
+
+Nome obrigatório (até 160 caracteres), preço positivo (até 10 inteiros e 2 casas decimais), duração inteira positiva (até 2147483647 minutos). Descrição opcional até 2000 caracteres; categoria opcional até 80. Espaços nas extremidades são removidos; opcionais vazios tornam-se null. Nomes são únicos inclusive entre inativos, ignorando caixa e espaços nas extremidades. Categorias são texto livre.
+
+A resposta de cadastro contém `id` (UUID), os cinco campos acima e `ativo` (boolean). A lista usa `{content, page, size, totalElements, totalPages}`. A interface inicia com `ativo=true`. Não há exclusão definitiva nem conversão automática de faturamentos antigos em procedimentos.
+
+Erros: 400 para dados inválidos, nome duplicado, paginação inválida ou lançamento com procedimento inativo; 404 para ID inexistente; 403 para sessão ausente ou CSRF ausente/inválido. Mensagens usam `mensagem` e validações de campos incluem `erros`, conforme o padrão da API.
+
+**Entrega coordenada:** publicar backend e frontend juntos, pois `POST /financeiro/lancar` passou a exigir `procedimentoId`. Atualizar sessões abertas antes de lançar receitas e cadastrar pelo menos um procedimento ativo. A migração V8 é aditiva; faturamentos antigos mantêm texto e valor, com `procedimento_id` nulo. Alterar nome/preço/situação não reescreve histórico.
