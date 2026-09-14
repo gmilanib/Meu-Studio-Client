@@ -47,6 +47,18 @@ it('trocar procedimento substitui o preço sugerido e limpar seleção bloqueia 
   expect(screen.getByRole('button', { name: 'Lançar receita' })).toBeDisabled()
 })
 
+it('vincula nome exato e avisa quando o texto não corresponde a cliente cadastrado', async () => {
+  apiFetch.mockImplementation(async (path) => path.startsWith('/procedimentos?')
+    ? response({ content: procedures, totalPages: 1 })
+    : response({ content: path.includes('page=0') ? [{ id: 7, nome: 'Maria', telefone: '9999' }] : [] }))
+  const user = openPage()
+  await screen.findByRole('option', { name: 'Design' })
+  await user.type(screen.getByLabelText('Cliente'), 'Maria')
+  expect(screen.getByText('Cliente vinculado ao cadastro.')).toBeInTheDocument()
+  await user.type(screen.getByLabelText('Cliente'), ' X')
+  expect(screen.getByText(/cliente não cadastrado/i)).toBeInTheDocument()
+})
+
 it('catálogo vazio orienta cadastrar e impede lançamento', async () => {
   apiFetch.mockResolvedValue(response({ content: [], totalPages: 0 }))
   openPage()

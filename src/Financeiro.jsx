@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import Header from './Header.jsx'
 import { apiFetch, getApiError } from './api.js'
 import ProcedimentoSelect from './ProcedimentoSelect.jsx'
+import ClienteInput from './ClienteInput.jsx'
 import './Procedimentos.css'
 
 function getToday() {
@@ -14,7 +15,7 @@ function getToday() {
 
 export default function FinanceiroPage() {
   const today = getToday()
-  const [form, setForm] = useState({ data: today, cliente: '', procedimentoId: '', valor: '', meioDePagamento: '' })
+  const [form, setForm] = useState({ data: today, cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
   const [selected, setSelected] = useState(null)
   const [catalogRevision, setCatalogRevision] = useState(0)
   const [clientes, setClientes] = useState([])
@@ -24,11 +25,17 @@ export default function FinanceiroPage() {
   useEffect(() => {
     async function loadClientes() {
       try {
-        const response = await apiFetch('/clientes')
-        if (response.ok) {
+        const entries = []
+        let page = 0
+        while (true) {
+          const response = await apiFetch(`/clientes?page=${page}&size=50`)
+          if (!response.ok) return
           const clientPage = await response.json()
-          setClientes(clientPage.content ?? [])
+          if (!clientPage.content?.length) break
+          entries.push(...clientPage.content)
+          page += 1
         }
+        setClientes(entries)
       } catch {
         // O lançamento continua disponível mesmo que a sugestão de clientes falhe.
       }
@@ -61,7 +68,7 @@ export default function FinanceiroPage() {
       }
 
       setStatus({ type: 'success', message: 'Receita lançada com sucesso.' })
-      setForm({ data: getToday(), cliente: '', procedimentoId: '', valor: '', meioDePagamento: '' })
+      setForm({ data: getToday(), cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
       setSelected(null)
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Não foi possível lançar a receita.' })
@@ -81,9 +88,8 @@ export default function FinanceiroPage() {
           <form className="financial-form" onSubmit={handleSubmit}>
             <label htmlFor="data">Data</label>
             <input id="data" name="data" type="date" value={form.data} onChange={updateField} max={today} required />
-            <label htmlFor="cliente">Cliente</label>
-            <input id="cliente" name="cliente" type="text" value={form.cliente} onChange={updateField} list="clientes-cadastrados" maxLength="120" required />
-            <datalist id="clientes-cadastrados">{clientes.map((cliente) => <option key={cliente.id} value={cliente.nome} />)}</datalist>
+            <ClienteInput value={form.cliente} clienteId={form.clienteId} clientes={clientes} disabled={submitting}
+              onChange={(cliente, clienteId) => setForm((current) => ({ ...current, cliente, clienteId }))} />
             <ProcedimentoSelect selected={selected} disabled={submitting} revision={catalogRevision} onSelect={(item) => {
               setSelected(item)
               setForm((current) => ({ ...current, procedimentoId: item?.id || '', valor: item ? String(item.preco) : '' }))
