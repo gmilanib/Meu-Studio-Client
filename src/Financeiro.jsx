@@ -13,9 +13,15 @@ function getToday() {
   return `${date.getFullYear()}-${month}-${day}`
 }
 
+function getCurrentTime() {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).format(new Date())
+}
+
 export default function FinanceiroPage() {
   const today = getToday()
-  const [form, setForm] = useState({ data: today, cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
+  const [form, setForm] = useState({ data: today, horario: getCurrentTime(), cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
   const [selected, setSelected] = useState(null)
   const [catalogRevision, setCatalogRevision] = useState(0)
   const [clientes, setClientes] = useState([])
@@ -68,7 +74,7 @@ export default function FinanceiroPage() {
       }
 
       setStatus({ type: 'success', message: 'Receita lançada com sucesso.' })
-      setForm({ data: getToday(), cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
+      setForm({ data: getToday(), horario: getCurrentTime(), cliente: '', clienteId: null, procedimentoId: '', valor: '', meioDePagamento: '' })
       setSelected(null)
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Não foi possível lançar a receita.' })
@@ -88,6 +94,8 @@ export default function FinanceiroPage() {
           <form className="financial-form" onSubmit={handleSubmit}>
             <label htmlFor="data">Data</label>
             <input id="data" name="data" type="date" value={form.data} onChange={updateField} max={today} required />
+            <label htmlFor="horario">Horário</label>
+            <input id="horario" name="horario" type="time" value={form.horario} onChange={updateField} required />
             <ClienteInput value={form.cliente} clienteId={form.clienteId} clientes={clientes} disabled={submitting}
               onChange={(cliente, clienteId) => setForm((current) => ({ ...current, cliente, clienteId }))} />
             <ProcedimentoSelect selected={selected} disabled={submitting} revision={catalogRevision} onSelect={(item) => {

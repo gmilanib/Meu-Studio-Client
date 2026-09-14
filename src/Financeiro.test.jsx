@@ -30,9 +30,24 @@ it('exige seleção, sugere preço, aceita ajuste e envia o ID; sucesso limpa o 
   expect(await screen.findByText('Receita lançada com sucesso.')).toBeInTheDocument()
   const [, options] = apiFetch.mock.calls.find(([path]) => path === '/financeiro/lancar')
   expect(JSON.parse(options.body)).toMatchObject({ procedimentoId: 'p1', valor: 125.5, cliente: 'Maria' })
+  expect(JSON.parse(options.body).horario).toMatch(/^\d{2}:\d{2}$/)
   expect(JSON.parse(options.body)).not.toHaveProperty('procedimento')
   expect(screen.getByLabelText('Procedimento ativo')).toHaveValue('')
   expect(screen.getByRole('button', { name: 'Lançar receita' })).toBeDisabled()
+})
+
+it('permite editar o horário do lançamento e o envia no formato HH:mm', async () => {
+  const user = openPage()
+  await screen.findByRole('option', { name: 'Design' })
+  await user.selectOptions(screen.getByLabelText('Procedimento ativo'), 'p1')
+  await user.type(screen.getByLabelText('Cliente'), 'Maria')
+  await user.type(screen.getByLabelText('Meio de pagamento'), 'PIX')
+  await user.clear(screen.getByLabelText('Horário'))
+  await user.type(screen.getByLabelText('Horário'), '18:45')
+  await user.click(screen.getByRole('button', { name: 'Lançar receita' }))
+
+  const [, options] = apiFetch.mock.calls.find(([path]) => path === '/financeiro/lancar')
+  expect(JSON.parse(options.body).horario).toBe('18:45')
 })
 
 it('trocar procedimento substitui o preço sugerido e limpar seleção bloqueia envio', async () => {

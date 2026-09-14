@@ -7,7 +7,7 @@ import { apiFetch } from './api.js'
 
 vi.mock('./Header.jsx', () => ({ default: () => <header>Meu studio</header> }))
 vi.mock('./api.js', () => ({ apiFetch: vi.fn(), getApiError: async (response, fallback) => (await response.json()).mensagem || fallback }))
-const row = { id: 'f1', data: '2026-09-10', cliente: 'Maria', clienteId: 1, procedimento: 'Design', procedimentoId: 'p1', valor: 150, meioDePagamento: 'PIX' }
+const row = { id: 'f1', data: '2026-09-10', horario: '18:30', cliente: 'Maria', clienteId: 1, procedimento: 'Design', procedimentoId: 'p1', valor: 150, meioDePagamento: 'PIX' }
 const client = { id: 1, nome: 'Maria', telefone: '1111' }
 const procedure = { id: 'p1', nome: 'Design', preco: 150 }
 const response = (data, ok = true) => ({ ok, json: async () => data })
@@ -32,21 +32,31 @@ it('edita todos os campos, permite texto livre e envia somente após comparar os
   await user.clear(clientInput); await user.type(clientInput, 'Cliente avulso')
   expect(screen.getByText(/cliente não cadastrado/i)).toBeInTheDocument()
   await user.clear(within(dialog).getByLabelText('Valor')); await user.type(within(dialog).getByLabelText('Valor'), '175')
+  await user.clear(within(dialog).getByLabelText('Horário')); await user.type(within(dialog).getByLabelText('Horário'), '19:15')
   await user.click(screen.getByRole('button', { name: 'Revisar alteração' }))
   expect(apiFetch.mock.calls.some(([, options]) => options?.method === 'PUT')).toBe(false)
   expect(screen.getByText(/Cliente avulso/)).toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Confirmar alteração' }))
   await screen.findByText('Lançamento atualizado com sucesso.')
   const [, options] = apiFetch.mock.calls.find(([, request]) => request?.method === 'PUT')
-  expect(JSON.parse(options.body)).toMatchObject({ cliente: 'Cliente avulso', clienteId: null, procedimentoId: 'p1', valor: 175 })
+  expect(JSON.parse(options.body)).toMatchObject({ horario: '19:15', cliente: 'Cliente avulso', clienteId: null, procedimentoId: 'p1', valor: 175 })
 })
 
 it('mostra todos os dados e exclui lançamento somente após confirmação', async () => {
   const user = openPage()
   await user.click(await screen.findByRole('button', { name: 'Excluir' }))
   expect(within(screen.getByRole('dialog')).getByText('10/09/2026')).toBeInTheDocument()
+  expect(within(screen.getByRole('dialog')).getByText('18:30')).toBeInTheDocument()
   expect(apiFetch.mock.calls.some(([, options]) => options?.method === 'DELETE')).toBe(false)
   await user.click(screen.getByRole('button', { name: 'Excluir definitivamente' }))
   expect(await screen.findByText('Lançamento excluído com sucesso.')).toBeInTheDocument()
   expect(apiFetch).toHaveBeenCalledWith('/financeiro/faturamentos/f1', { method: 'DELETE' })
+})
+
+it('exibe o horário logo após a data na tabela', async () => {
+  openPage()
+  const table = await screen.findByRole('table')
+  expect(within(table).getAllByRole('columnheader').slice(0, 2).map((header) => header.textContent))
+    .toEqual(['Data', 'Horário'])
+  expect(within(table).getByText('18:30')).toBeInTheDocument()
 })
