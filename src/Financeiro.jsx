@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
 import Header from './Header.jsx'
+import FinancialNav from './FinancialNav.jsx'
 import { apiFetch, getApiError } from './api.js'
 import ProcedimentoSelect from './ProcedimentoSelect.jsx'
 import ClienteInput from './ClienteInput.jsx'
@@ -90,7 +90,7 @@ export default function FinanceiroPage() {
           <p className="eyebrow">Financeiro</p>
           <h1 id="financial-title">Lançar receita</h1>
           <p>Registre um faturamento já realizado pelo studio.</p>
-          <nav className="financial-switch" aria-label="Opções financeiras"><Link to="/financeiro" className="active">Lançar faturamento</Link><Link to="/financeiro/relatorio">Relatório de faturamentos</Link></nav>
+          <FinancialNav />
           <form className="financial-form" onSubmit={handleSubmit}>
             <label htmlFor="data">Data</label>
             <input id="data" name="data" type="date" value={form.data} onChange={updateField} max={today} required />

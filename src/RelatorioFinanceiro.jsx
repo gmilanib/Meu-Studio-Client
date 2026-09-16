@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
 import Header from './Header.jsx'
+import FinancialNav from './FinancialNav.jsx'
 import ClienteInput from './ClienteInput.jsx'
 import ProcedimentoSelect from './ProcedimentoSelect.jsx'
 import { apiFetch, getApiError } from './api.js'
@@ -88,7 +88,7 @@ export default function RelatorioFinanceiroPage() {
 
   return <main className="app-shell"><div className="app-frame"><Header /><div className="report-page">
     <p className="eyebrow">Financeiro</p><h1>Relatório de faturamentos</h1><p className="report-intro">Consulte os lançamentos e acompanhe o faturamento do período selecionado.</p>
-    <nav className="financial-switch" aria-label="Opções financeiras"><Link to="/financeiro">Lançar faturamento</Link><Link to="/financeiro/relatorio" className="active">Relatório de faturamentos</Link></nav>
+    <FinancialNav />
     <form className="report-filters" onSubmit={(event) => { event.preventDefault(); setStatus({ loading: true, error: '' }); load(filters) }}>
       <label>Cliente<input name="cliente" value={filters.cliente} onChange={updateFilter} placeholder="Buscar por nome" /></label><label>Procedimento<input name="procedimento" value={filters.procedimento} onChange={updateFilter} placeholder="Buscar por procedimento" /></label><label>Valor exato<input name="valor" type="number" min="0" step="0.01" inputMode="decimal" value={filters.valor} onChange={updateFilter} placeholder="Ex.: 150,00" /></label><label>Meio de pagamento<input name="meioDePagamento" value={filters.meioDePagamento} onChange={updateFilter} placeholder="Ex.: PIX" /></label>
       <label>Data exata<input name="data" type="date" value={filters.data} onChange={updateFilter} /></label><label>Data inicial<input name="dataInicio" type="date" value={filters.dataInicio} onChange={updateFilter} max={filters.dataFim || undefined} /></label><label>Data final<input name="dataFim" type="date" value={filters.dataFim} onChange={updateFilter} min={filters.dataInicio || undefined} /></label><div className="filter-actions"><button type="submit">Aplicar filtros</button><button type="button" className="secondary-action" onClick={() => { setFilters(initialFilters); setStatus({ loading: true, error: '' }); load(initialFilters) }}>Limpar</button></div>
