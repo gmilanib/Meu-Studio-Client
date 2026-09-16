@@ -42,6 +42,18 @@ it('edita todos os campos, permite texto livre e envia somente após comparar os
   expect(JSON.parse(options.body)).toMatchObject({ horario: '19:15', cliente: 'Cliente avulso', clienteId: null, procedimentoId: 'p1', valor: 175 })
 })
 
+it('permite apagar o horário na edição para salvar o faturamento à meia-noite', async () => {
+  const user = openPage()
+  await user.click(await screen.findByRole('button', { name: 'Editar' }))
+  await user.clear(within(screen.getByRole('dialog')).getByLabelText('Horário'))
+  await user.click(screen.getByRole('button', { name: 'Revisar alteração' }))
+  await user.click(screen.getByRole('button', { name: 'Confirmar alteração' }))
+  await screen.findByText('Lançamento atualizado com sucesso.')
+
+  const [, options] = apiFetch.mock.calls.find(([, request]) => request?.method === 'PUT')
+  expect(JSON.parse(options.body).horario).toBe('')
+})
+
 it('mostra todos os dados e exclui lançamento somente após confirmação', async () => {
   const user = openPage()
   await user.click(await screen.findByRole('button', { name: 'Excluir' }))

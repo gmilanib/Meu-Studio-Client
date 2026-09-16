@@ -50,6 +50,21 @@ it('permite editar o horário do lançamento e o envia no formato HH:mm', async 
   expect(JSON.parse(options.body).horario).toBe('18:45')
 })
 
+it('inicia com o horário atual e permite enviar o campo vazio para usar meia-noite', async () => {
+  const user = openPage()
+  const horario = screen.getByLabelText('Horário')
+  expect(horario.value).toMatch(/^\d{2}:\d{2}$/)
+  await screen.findByRole('option', { name: 'Design' })
+  await user.selectOptions(screen.getByLabelText('Procedimento ativo'), 'p1')
+  await user.type(screen.getByLabelText('Cliente'), 'Maria')
+  await user.type(screen.getByLabelText('Meio de pagamento'), 'PIX')
+  await user.clear(horario)
+  await user.click(screen.getByRole('button', { name: 'Lançar receita' }))
+
+  const [, options] = apiFetch.mock.calls.find(([path]) => path === '/financeiro/lancar')
+  expect(JSON.parse(options.body).horario).toBe('')
+})
+
 it('trocar procedimento substitui o preço sugerido e limpar seleção bloqueia envio', async () => {
   const user = openPage()
   await screen.findByRole('option', { name: 'Design' })

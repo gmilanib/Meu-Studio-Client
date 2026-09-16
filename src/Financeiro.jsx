@@ -95,7 +95,7 @@ export default function FinanceiroPage() {
             <label htmlFor="data">Data</label>
             <input id="data" name="data" type="date" value={form.data} onChange={updateField} max={today} required />
             <label htmlFor="horario">Horário</label>
-            <input id="horario" name="horario" type="time" value={form.horario} onChange={updateField} required />
+            <input id="horario" name="horario" type="time" value={form.horario} onChange={updateField} />
             <ClienteInput value={form.cliente} clienteId={form.clienteId} clientes={clientes} disabled={submitting}
               onChange={(cliente, clienteId) => setForm((current) => ({ ...current, cliente, clienteId }))} />
             <ProcedimentoSelect selected={selected} disabled={submitting} revision={catalogRevision} onSelect={(item) => {
